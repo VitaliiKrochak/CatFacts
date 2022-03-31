@@ -1,10 +1,8 @@
-import 'package:cat_facts_app/controllers/home_controller.dart';
 import 'package:cat_facts_app/models/cat_facts_model.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_navigation/src/extension_navigation.dart';
-import 'package:get/get_state_manager/src/simple/get_state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../bloc/facts_bloc.dart';
 
 class History extends StatelessWidget {
   final scrollController = ScrollController();
@@ -16,36 +14,39 @@ class History extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          // physics: AlwaysScrollableScrollPhysics(),
           controller: scrollController,
-          child: GetBuilder<HomeController>(
-            builder: (controller) => Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.only(top: 15, left: 15),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.only(top: 15, left: 15),
+                alignment: Alignment.topLeft,
+                child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back_ios),
                   alignment: Alignment.topLeft,
-                  child: IconButton(
-                    onPressed: Get.back,
-                    icon: const Icon(Icons.arrow_back_ios),
-                    alignment: Alignment.topLeft,
-                  ),
                 ),
-                ListView.builder(
-                    shrinkWrap: true,
-                    physics: const ScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      return cards(controller.factList[index],controller);
-                    },
-                    itemCount: controller.factList.length),
-              ],
-            ),
+              ),
+              BlocBuilder<FactsBloc, FactsState>(builder: (context, state) {
+                if (state is FactsLoaded) {
+                  return ListView.builder(
+                      shrinkWrap: true,
+                      physics: const ScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        return cards(state.factsList[index]);
+                      },
+                      itemCount: state.factsList.length);
+                } else {
+                  return Container();
+                }
+              })
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget cards(CatFactsModel model,controller) {
+  Widget cards(CatFactsModel model) {
     return Padding(
       padding: const EdgeInsets.only(left: 10, right: 10),
       child: Column(
@@ -61,7 +62,7 @@ class History extends StatelessWidget {
             height: 30,
           ),
           Text(
-            DateFormat('yyyy-MM-dd').format(controller.model.updatedAt),
+            DateFormat('yyyy-MM-dd').format(model.updatedAt),
             style: const TextStyle(fontSize: 24),
           ),
         ],

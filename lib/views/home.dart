@@ -1,6 +1,8 @@
-import 'package:cat_facts_app/controllers/home_controller.dart';
+import 'package:cat_facts_app/bloc/facts_bloc.dart';
+import 'package:cat_facts_app/config/app_settings.dart';
+import 'package:cat_facts_app/views/history.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get_state_manager/src/simple/get_state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 class Home extends StatelessWidget {
@@ -13,33 +15,32 @@ class Home extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          // physics: AlwaysScrollableScrollPhysics(),
           controller: scrollController,
-          child: GetBuilder<HomeController>(
-            builder: (controller) => Column(
-              children: [
-                controller.isLoading == false
+          child: Column(
+            children: [
+              BlocBuilder<FactsBloc, FactsState>(builder: (context, state) {
+                return state is FactsLoaded
                     ? Padding(
                         padding: const EdgeInsets.only(left: 10, right: 10),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
                             Image.network(
-                              '${controller.catsImagesUrl}?${DateTime.now().millisecondsSinceEpoch.toString()}',
+                              '${AppSettings.catsImagesUrl}?${DateTime.now().millisecondsSinceEpoch.toString()}',
                               fit: BoxFit.cover,
                             ),
                             const SizedBox(
                               height: 30,
                             ),
                             Text(
-                              controller.model.text,
+                              state.text,
                               style: const TextStyle(fontSize: 24),
                             ),
                             const SizedBox(
                               height: 30,
                             ),
                             Text(
-                              DateFormat('yyyy-MM-dd').format(controller.model.updatedAt),
+                              DateFormat('yyyy-MM-dd').format(state.updatedAt),
                               style: const TextStyle(fontSize: 24),
                             ),
                             const SizedBox(
@@ -48,9 +49,17 @@ class Home extends StatelessWidget {
                           ],
                         ),
                       )
-                    : Container(padding: EdgeInsets.all(20),alignment: Alignment.center,child: CircularProgressIndicator(),),
-                TextButton(
-                  onPressed: controller.getCatFact,
+                    : Container(
+                        padding: EdgeInsets.all(20),
+                        alignment: Alignment.center,
+                        child: CircularProgressIndicator(),
+                      );
+              }),
+              BlocBuilder<FactsBloc, FactsState>(builder: (context, state) {
+                return TextButton(
+                  key: const Key('click'),
+                  onPressed: () =>
+                      context.read<FactsBloc>().add(AnotherFactClicked()),
                   style: TextButton.styleFrom(
                     primary: Colors.white,
                     shape: RoundedRectangleBorder(
@@ -62,25 +71,29 @@ class Home extends StatelessWidget {
                     'Another fact',
                     style: TextStyle(fontSize: 24, color: Colors.black),
                   ),
+                );
+              }),
+              const SizedBox(
+                height: 30,
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => History()));
+                },
+                style: TextButton.styleFrom(
+                  primary: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50.0),
+                    side: const BorderSide(color: Colors.black, width: 2),
+                  ),
                 ),
-                const SizedBox(
-                  height: 30,
+                child: const Text(
+                  'History',
+                  style: TextStyle(fontSize: 24, color: Colors.black),
                 ),
-                TextButton(
-                    onPressed: controller.onHistoryPressed,
-                    style: TextButton.styleFrom(
-                      primary: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50.0),
-                        side: const BorderSide(color: Colors.black, width: 2),
-                      ),
-                    ),
-                    child: const Text(
-                      'History',
-                      style: TextStyle(fontSize: 24, color: Colors.black),
-                    )),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

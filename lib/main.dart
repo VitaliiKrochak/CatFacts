@@ -1,11 +1,11 @@
-import 'package:cat_facts_app/routes/app_pages.dart';
+import 'package:cat_facts_app/repository/facts_repository.dart';
 import 'package:cat_facts_app/views/home.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'bindings/initial_bindings.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
- void main() async {
-  await InitialBinding().dependencies();
+import 'bloc/facts_bloc.dart';
+
+void main() async {
   runApp(const MyApp());
 }
 
@@ -14,14 +14,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return RepositoryProvider(
+      create: (context) => FactsRepository(),
+      child: BlocProvider(
+        create: (context) => FactsBloc(context.read<FactsRepository>())
+          ..add(AnotherFactClicked()),
+        child: MaterialApp(
+          title: 'Flutter Demo',
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+          ),
+          home: Home(),
+        ),
       ),
-      getPages: AppPages.routes,
-      home: Home(),
-      //initialRoute: AppPages.home,
     );
   }
 }
